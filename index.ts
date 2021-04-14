@@ -8,6 +8,8 @@ import {
   AuthenticateTokenMiddle,
   SignDataJWT,
   Keys,
+  AuthenticateSecureFile,
+  Keys1,
 } from './src/GeneralFunctions';
 const app = express();
 app.use(express.json());
@@ -19,6 +21,22 @@ app.use(
   '/static',
   SetImutableCacheHeader,
   express.static(join(__dirname, 'static'))
+);
+app.use(
+  '/fonts',
+  SetImutableCacheHeader,
+  express.static(join(__dirname, 'fonts'))
+);
+app.use(
+  '/keys',
+  AuthenticateSecureFile,
+  SetImutableCacheHeader,
+  express.static(join(__dirname, 'keys'))
+);
+app.use(
+  '/booz',
+  SetImutableCacheHeader,
+  express.static(join(__dirname, 'booz'))
 );
 app.post(
   '/upload',
@@ -54,12 +72,28 @@ app.post(
     return res.status(200).send(ress);
   }
 );
-app.get('/token', (req, res) => {
-  res.send(
-    SignDataJWT({}, Keys, {
-      expiresIn: '1d',
-    })
-  );
+app.post('/token', (req, res) => {
+  const data = req.body;
+  if (
+    data.uname &&
+    data.uname === 'keyur39' &&
+    data.password &&
+    data.password === 'keyur3939'
+  ) {
+    res.send({
+      key: SignDataJWT({}, Keys, {
+        expiresIn: '1d',
+      }),
+      key1: SignDataJWT(
+        {
+          user: randomBytes(15).toString('hex'),
+        },
+        Keys1
+      ),
+    });
+  } else {
+    res.sendStatus(403);
+  }
 });
 app.use('**/*', (req, res) => {
   res.send('2.0');
